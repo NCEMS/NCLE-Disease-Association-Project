@@ -1,11 +1,6 @@
 ---
 title: "Natively-Entangled-Proteins-Linked-to-Human-Disease"
-output:
-  html_document:
-    toc: false
-    toc_depth: 3
-    number_sections: false
-    theme: readable
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
