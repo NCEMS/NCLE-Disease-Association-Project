@@ -1,38 +1,10 @@
 ---
 title: "Functions"
-output:
-  html_document:
-    toc: false
-    toc_depth: 3
-    number_sections: false
-    theme: readable
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-```
-
-```{r, echo=FALSE, results='asis'}
-cat('
-<style>
-body {
-  font-family: "Times New Roman", Times, serif !important;
-  text-align: justify;
-}
-
-p {
-  text-align: justify;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: "Times New Roman", Times, serif !important;
-}
-
-code, pre {
-  font-family: "Times New Roman", Times, serif !important;
-}
-</style>
-')
 ```
 
 # Overview

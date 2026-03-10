@@ -1,32 +1,17 @@
 Natively-Entangled-Proteins-Linked-to-Human-Disease
 ================
 
-<style>
-body {
-  font-family: "Times New Roman", Times, serif !important;
-  text-align: justify;
-}
-&#10;p {
-  text-align: justify;
-}
-&#10;h1, h2, h3, h4, h5, h6 {
-  font-family: "Times New Roman", Times, serif !important;
-}
-&#10;code, pre {
-  font-family: "Times New Roman", Times, serif !important;
-}
-</style>
-
 # Overview
 
 This repository contains the code needed to reproduce the results in
-\[PAPER PLACEHOLDER\].
+Natively Entangled proteins are linked to human disease and pathogenic
+mutations likely due to misfolding.
 
 Because many source data files are very large, this repository contains
 code and instructions to run the analyses, but does not include all raw
 data by default. To recreate the full datasets used in the paper, please
-contact \[CONTACT NAME / EMAIL\] to obtain the raw data bundle and place
-it in the appropriate directories described below.
+contact Maria Anglero <marifepr02@gmail.com> to obtain the raw data
+bundle and place it in the appropriate directories described below.
 
 ## Repository structure
 
