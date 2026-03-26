@@ -56,6 +56,34 @@ used for the study.
 Before running the analyses, install the required packages (using the
 versions listed in the files above where possible).
 
+## Data access (CyVerse)
+
+The full datasets required to run these analyses are not included in
+this repository due to their large size. Instead, they are hosted on
+CyVerse.
+
+1.  Create an account
+
+Create a free CyVerse account: <https://user.cyverse.org/signup>
+
+2.  Access and download the data
+
+Once your account is created and verified, you will be able to access
+the project data through the CyVerse Data Store at the following
+location:
+
+\[PLACEHOLDER: CyVerse data link\]
+
+3.  Recommended: download using GO commands
+
+For large datasets, we strongly recommend using CyVerse GO commands
+(iCommands) rather than downloading through the browser.
+
+Install GO commands
+
+Follow the official installation guide:
+<https://learning.cyverse.org/ds/gocommands/installation/>
+
 ## How to run
 
 All analyses in this repository are launched from the `Execute/`
