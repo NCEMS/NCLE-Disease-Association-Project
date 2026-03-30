@@ -313,12 +313,10 @@ g50 <- out3_50[1:50,"gene"]
 i=2
 x1 <- X1[X1$gene==g50[i], , drop = FALSE]
 shap <- Shapley$new(mod1, x.interest = x1) # for this protein, how much did each feature contribute to the predicted disease probability?
-plot(shap)
 
 set.seed(123)
 x0 <- X1[X1$gene==g50[i], c("gene", m0_predictors), drop = FALSE]
 shap0 <- Shapley$new(mod0, x.interest = x0)
-plot(shap0)
 
 
 pdf(paste0("Results/Plots/shap_top50_pairs", format(Sys.time(), "_%Y-%m-%d_%H-%M-%S"), ".pdf"), width = 14, height = 8)

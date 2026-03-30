@@ -4,14 +4,13 @@ Natively-Entangled-Proteins-Linked-to-Human-Disease
 # Overview
 
 This repository contains the code needed to reproduce the results in
-Natively Entangled proteins are linked to human disease and pathogenic
-mutations likely due to misfolding.
+*Natively Entangled proteins are linked to human disease and pathogenic
+mutations likely due to misfolding*.
 
-Because many source data files are very large, this repository contains
+Because many source data files are very large, this repository includes
 code and instructions to run the analyses, but does not include all raw
-data by default. To recreate the full datasets used in the paper, please
-contact Maria Anglero <marifepr02@gmail.com> to obtain the raw data
-bundle and place it in the appropriate directories described below.
+data by default. To recreate the datasets used in this study, users must
+download the required data from CyVerse using the instructions below.
 
 ## Repository structure
 
@@ -72,17 +71,31 @@ Once your account is created and verified, you will be able to access
 the project data through the CyVerse Data Store at the following
 location:
 
-\[PLACEHOLDER: CyVerse data link\]
+<https://de.cyverse.org/data/ds/iplant/home/shared/NCEMS/working-groups/disease-entanglement-project/NCLE-Disease-Association-Project>
+Data
+(Reduced)/Data_Cyverse?type=folder&resourceId=d464f8b0-295b-11f1-b18d-90e2ba675364
 
-3.  Recommended: download using GO commands
+### 3. Download the data
 
-For large datasets, we strongly recommend using CyVerse GO commands
-(iCommands) rather than downloading through the browser.
+You can download the data in two ways:
 
-Install GO commands
+**Option A: Direct download (via browser)**  
+Download the full `Data_Cyverse` folder from the CyVerse interface.
 
-Follow the official installation guide:
+**Option B: Using CyVerse GO commands (recommended for large files)**  
+Instructions for installing and using GO commands:  
 <https://learning.cyverse.org/ds/gocommands/installation/>
+
+### 4. Place data in the repository
+
+After downloading:
+
+- Locate the folder named `Data_Cyverse`
+- Ensure the `Data/` folder in this repository is empty
+- Move all contents from `Data_Cyverse` into the `Data/` folder
+
+The directory structure inside `Data/` must match exactly what is
+provided in `Data_Cyverse` before running any analyses.
 
 ## How to run
 
@@ -117,8 +130,8 @@ The full pipeline was executed with the following computational
 configuration:
 
 - **Runtime:** ~17 minutes  
-- **Cores:** 8  
-- **Memory:** 250 GB
+- **Cores:** 10  
+- **Memory:** 128 GB
 
 Note that runtime may vary depending on system specifications and I/O
 performance.
