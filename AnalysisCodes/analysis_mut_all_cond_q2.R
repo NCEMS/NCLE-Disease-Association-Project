@@ -5,7 +5,7 @@
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("control file input:\n")
 cat("types: af\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # Mutation data
 source("DataExtractionCode/m2_data.R")
@@ -40,7 +40,7 @@ coef_table_len <- coef_table_len[, c(
 )]
 
 # File naming
-fileName <- paste("mutation_q2_type_af_pthr_",plddt_thresh,sep="")
+fileName <- paste("mutation_q2_type_af_pthr_70",sep="")
 final_output_file <- paste0(
   "Results/Dataframes/", fileName,
   "_results_len_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".csv"

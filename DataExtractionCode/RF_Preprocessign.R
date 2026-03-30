@@ -1,9 +1,8 @@
 # Score
 type = "af"
-plddt_thresh = 70
 
 cat("type:", type, "\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 library(dplyr)
 library(tidyr)
@@ -137,32 +136,21 @@ final_dfB_max <- final_dfB_max %>%
   left_join(sasa_join, by = "gene") %>%
   mutate(Total_Mutations_n = replace_na(Total_Mutations_n, 0))
 
-
-#### Disgenet Score Percentiles ####
-# Used to calculate percentiles from "raw" disgenet results
-sub_finalA <- final_dfA[,c("Association_ID","score")]
-sub_finalA <- unique(sub_finalA)
-sub_finalA <- sub_finalA[sub_finalA$Association_ID>0,]
-
-# Calculate score percentiles
-percentiles <- quantile(sub_finalA$score, c(0.95, 0.75, 0.50))
-rm(sub_finalA)
-
 #### Contingency tables ####
 # Subset necessary columns
-UniScoDis <- final_dfA[, c("uniprotids", "score","Entanglement", "Cov_Entanglement")]
+UniScoDis <- final_dfA[, c("uniprotids","50th_percentile", "Entanglement", "Cov_Entanglement")]
 
 # Remove duplicates
 UniScoDis <- distinct(UniScoDis)
-# Keep Uniprots with the highest score
-max_df <- UniScoDis %>%
-  group_by(uniprotids) %>%
-  filter(score == max(score)) %>%
-  ungroup()
-
 # Determine if the score falls in the percentile
-final_df <- max_df %>%
-  mutate(`50th_percentile` = ifelse(is.na(score), "No", ifelse(score >= percentiles[3], "Yes", "No")))
+final_df <- UniScoDis %>%
+  group_by(uniprotids) %>%
+  summarise(
+    `50th_percentile` = ifelse(any(`50th_percentile` == "Yes", na.rm = TRUE), "Yes", "No"),
+    Entanglement      = ifelse(any(Entanglement == "Yes", na.rm = TRUE), "Yes", "No"),
+    Cov_Entanglement  = ifelse(any(Cov_Entanglement == "Yes", na.rm = TRUE), "Yes", "No"),
+    .groups = "drop"
+  )
 
 # Extract 50th_percentile from final_df and rename to disease
 disease_join <- final_df %>%

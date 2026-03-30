@@ -37,7 +37,7 @@ tested <- tibble(tested_genes = tested_genes) %>%
 # Extract GeneID and save (to map to Uniprot ID)
 # write.table(
 #   cris_ess$GeneID,
-#   file = "results/dataframes/gene_ids_cris.txt",
+#   file = "Results/Dataframes/gene_ids_cris.txt",
 #   row.names = FALSE,
 #   col.names = FALSE,
 #   quote = FALSE
@@ -45,7 +45,7 @@ tested <- tibble(tested_genes = tested_genes) %>%
 
 # write.table(
 #   tested$GeneID,
-#   file = "results/dataframes/gene_tested.txt",
+#   file = "Results/Dataframes/gene_tested.txt",
 #   row.names = FALSE,
 #   col.names = FALSE,
 #   quote = FALSE
@@ -81,18 +81,18 @@ essentiality_data_full2 <- merge(
 
 # Check whether GeneName appears in UniProt Gene.Names
 essentiality_data_full$GeneName_match <- ifelse(
-  mapply(function(g, names) grepl(paste0("\\b", g, "\\b"), names), 
-         essentiality_data_full$GeneName, 
+  mapply(function(g, names) grepl(paste0("\\b", g, "\\b"), names),
+         essentiality_data_full$GeneName,
          essentiality_data_full$Gene.Names),
-  "Yes", 
+  "Yes",
   "No"
 )
 
 essentiality_data_full2$GeneName_match <- ifelse(
-  mapply(function(g, names) grepl(paste0("\\b", g, "\\b"), names), 
-         essentiality_data_full2$GeneName, 
+  mapply(function(g, names) grepl(paste0("\\b", g, "\\b"), names),
+         essentiality_data_full2$GeneName,
          essentiality_data_full2$Gene.Names),
-  "Yes", 
+  "Yes",
   "No"
 )
 

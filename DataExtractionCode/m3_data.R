@@ -3,7 +3,7 @@
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("control file input: Controlm1_3\n")
 cat("types: af\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # Data Checks
 # Libraries
@@ -41,122 +41,18 @@ repeated_clinvar_pathogenic <- unique(repeated_mutations %>%
 user_inputs_to_remove <- unique(repeated_clinvar_pathogenic$User_input)
 
 ################################################################################
-# analysis1_1.R -> final_dfA, final_dfB
+# analysis1_1.R -> final_dfB
 ################################################################################
-final_dfA <- read.csv("Data/final_dfA02_22_2026.csv") # Disease data
 final_dfB <- read.csv("Data/final_dfB_af_02_22_2026.csv") # Entanglement data
 
-# Filter final_dfB by using plddt
-final_dfB <- final_dfB %>%
-  filter(plddt >= plddt_thresh)
-
-# Keep only matching proteins in final_dfA
-final_dfA <- final_dfA %>%
-  filter(uniprotids %in% final_dfB$gene)
-
-#### Disgenet Score Percentiles ####
-# Used to calculate percentiles from "raw" disgenet results
-sub_finalA <- final_dfA[,c("Association_ID","score")]
-sub_finalA <- unique(sub_finalA)
-sub_finalA <- sub_finalA[sub_finalA$Association_ID>0,]
-# Calculate score percentiles
-percentiles <- quantile(sub_finalA$score, c(0.95, 0.75, 0.50))
-rm(sub_finalA)
-
-### Prepare a dataframe for contingency tables (one per disease class) ####
-# Subset necessary columns
-UniScoDis <- final_dfA[, c("uniprotids", "score","diseaseClasses_MSH", "Entanglement")]
-
-# Remove duplicates
-UniScoDis <- distinct(UniScoDis)
-
-# List of all disease classes
-all_disease_classes <- c(
-  "Infections (C01)",
-  "Neoplasms (C04)",
-  "Musculoskeletal Diseases (C05)",
-  "Digestive System Diseases (C06)",
-  "Stomatognathic Diseases (C07)",
-  "Respiratory Tract Diseases (C08)",
-  "Otorhinolaryngologic Diseases (C09)",
-  "Nervous System Diseases (C10)",
-  "Eye Diseases (C11)",
-  "Urogenital Diseases (C12)",
-  "Cardiovascular Diseases (C14)",
-  "Hemic and Lymphatic Diseases (C15)",
-  "Congenital, Hereditary, and Neonatal Diseases and Abnormalities (C16)",
-  "Skin and Connective Tissue Diseases (C17)",
-  "Nutritional and Metabolic Diseases (C18)",
-  "Endocrine System Diseases (C19)",
-  "Immune System Diseases (C20)",
-  "Disorders of Environmental Origin (C21)",
-  "Pathological Conditions, Signs and Symptoms (C23)",
-  "Chemically-Induced Disorders (C25)",
-  "Behavior and Behavior Mechanisms (F01)",
-  "Psychological Phenomena (F02)",
-  "Mental Disorders (F03)"
-)
-
-# Function to create new columns based on disease class codes
-create_disease_columns <- function(data, disease_classes) {
-  for (disease_class in disease_classes) {
-    # extract code part of disease_class e.g., (C01)
-    code <- str_extract(disease_class, "\\([CF]\\d+\\)")
-    # extract non-code part of disease_class e.g., "Infections"
-    name <- gsub("\\s*\\(.*\\)", "",disease_class)
-    # create a new column
-    # where each element = score if the code is in diseaseClasses_MSH, o/w 0
-    data[[disease_class]] <- ifelse(grepl(code, data$diseaseClasses_MSH), data$score, 0)
-  }
-  return(data)
-}
-
-# Call the function to add columns
-UniScoDis <- create_disease_columns(UniScoDis, all_disease_classes)
-
-# Remove the score and diseaseClasses_MSH columns
-UniScoDis <- subset(UniScoDis, select = -c(score, diseaseClasses_MSH))
-
-# Group by uniprotids and calculate maximum scores for each disease class
-max_scores <- UniScoDis %>%
-  group_by(uniprotids) %>%
-  mutate(
-    `Digestive System Diseases (C06)` = max(`Digestive System Diseases (C06)`),
-    `Neoplasms (C04)` = max(`Neoplasms (C04)`),
-    `Pathological Conditions, Signs and Symptoms (C23)` = max(`Pathological Conditions, Signs and Symptoms (C23)`),
-    `Congenital, Hereditary, and Neonatal Diseases and Abnormalities (C16)` = max(`Congenital, Hereditary, and Neonatal Diseases and Abnormalities (C16)`),
-    `Endocrine System Diseases (C19)` = max(`Endocrine System Diseases (C19)`),
-    `Urogenital Diseases (C12)` = max(`Urogenital Diseases (C12)`),
-    `Respiratory Tract Diseases (C08)` = max(`Respiratory Tract Diseases (C08)`),
-    `Nervous System Diseases (C10)` = max(`Nervous System Diseases (C10)`),
-    `Nutritional and Metabolic Diseases (C18)` = max(`Nutritional and Metabolic Diseases (C18)`),
-    `Stomatognathic Diseases (C07)` = max(`Stomatognathic Diseases (C07)`),
-    `Eye Diseases (C11)` = max(`Eye Diseases (C11)`),
-    `Musculoskeletal Diseases (C05)` = max(`Musculoskeletal Diseases (C05)`),
-    `Cardiovascular Diseases (C14)` = max(`Cardiovascular Diseases (C14)`),
-    `Infections (C01)` = max(`Infections (C01)`),
-    `Immune System Diseases (C20)` = max(`Immune System Diseases (C20)`),
-    `Skin and Connective Tissue Diseases (C17)` = max(`Skin and Connective Tissue Diseases (C17)`),
-    `Otorhinolaryngologic Diseases (C09)` = max(`Otorhinolaryngologic Diseases (C09)`),
-    `Hemic and Lymphatic Diseases (C15)` = max(`Hemic and Lymphatic Diseases (C15)`),
-    `Mental Disorders (F03)` = max(`Mental Disorders (F03)`),
-    `Behavior and Behavior Mechanisms (F01)` = max(`Behavior and Behavior Mechanisms (F01)`),
-    `Chemically-Induced Disorders (C25)` = max(`Chemically-Induced Disorders (C25)`),
-    `Psychological Phenomena (F02)` = max(`Psychological Phenomena (F02)`),
-    `Disorders of Environmental Origin (C21)` = max(`Disorders of Environmental Origin (C21)`)
-  ) %>%
-  distinct()
-
-#### Prepare dataframes for Contingency tables ####
-
-# if score>=thresh, disease == "Yes"
-convert_to_yes_no <- function(value, thresh) {
-  ifelse(value >= thresh, "Yes", "No")
-}
+# Disease Class and Entanglement Data
+source("Functions/dataProcessingClass.R")
 
 # Apply the function to all columns except the first and second one (uniprotids)
-UniScoDis50 <- max_scores %>%
-  mutate(across(-c(0,1), ~convert_to_yes_no(., percentiles[3])))
+out <- dataProcessing_UniScoDis(type = "af")
+
+UniScoDis50 <- out$UniScoDis50
+UniScoDis50  <- UniScoDis50  %>% as_tibble() %>% group_by(uniprotids)
 
 # Summarized Disease data
 final_df <- read_csv("Data/final_df_af_0_2026-2-6.csv")

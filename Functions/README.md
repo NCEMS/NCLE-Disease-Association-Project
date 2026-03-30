@@ -6,14 +6,13 @@ Functions
 The `Functions` folder contains reusable data-processing utilities that
 standardize how core datasets are loaded, filtered, and transformed
 before analysis. These scripts centralize repeated preprocessing
-steps—such as selecting a dataset variant (AF vs crystal sets), applying
-pLDDT quality filtering, collapsing disease evidence to one score per
-protein, constructing modeling-ready tables, computing derived
-entanglement metrics (e.g., $G_{\mathrm{sum}}$ and $G_{\mathrm{max}}$),
-and converting entanglement-region annotations into residue-index
-vectors. Keeping these steps in one place ensures that all downstream
-analyses rely on consistent definitions, filtering rules, and derived
-variables.
+steps—such as selecting a dataset variant (AF vs crystal sets),
+collapsing disease evidence to one score per protein, constructing
+modeling-ready tables, computing derived entanglement metrics (e.g.,
+$G_{\mathrm{sum}}$ and $G_{\mathrm{max}}$), and converting
+entanglement-region annotations into residue-index vectors. Keeping
+these steps in one place ensures that all downstream analyses rely on
+consistent definitions, filtering rules, and derived variables.
 
 # Function Scripts
 
@@ -22,11 +21,10 @@ variables.
 This file defines a helper function that loads the core
 disease-association table (final_dfA) and entanglement-feature table
 (final_dfB) and returns harmonized versions based on a user-selected
-dataset type and pLDDT threshold. It supports multiple dataset variants
-(e.g., AF-only, crystal-only), standardizes identifiers, joins
-per-protein pLDDT values, and applies the pLDDT filter for AF-based
-datasets so downstream analyses receive a consistent and appropriately
-filtered pair of protein-level tables.
+dataset type. It supports multiple dataset variants (e.g., AF-only,
+crystal-only), and standardizes identifiers so downstream analyses
+receive a consistent and appropriately filtered pair of protein-level
+tables.
 
 ### Inputs
 
@@ -35,16 +33,12 @@ filtered pair of protein-level tables.
   - “af”
   - “crystal”
 
-- plddt_thresh (numeric, 0–100): Applies pLDDT filtering for AF-based
-  datasets (e.g., “af”), ensuring only proteins meeting the quality
-  threshold are returned.
-
 ### Outputs
 
 The function returns a list containing two harmonized data frames:
 
 - final_dfA — protein-level disease association table filtered according
-  to the selected dataset type and pLDDT threshold.
+  to the selected dataset type.
 
 - final_dfB — corresponding protein-level entanglement feature table
   filtered to match the proteins retained in final_dfA.
@@ -116,3 +110,32 @@ The script produces the following:
 
 This dataset is used in mutation analyses to determine whether
 individual mutations occur within entangled regions of proteins.
+
+## `dataProcessingClass.R`
+
+This file defines a helper function that loads precomputed UniScoDis
+datasets corresponding to different DisGeNET percentile thresholds
+(50th, 75th, and 95th), applies a pLDDT filter, and returns cleaned
+versions for downstream analysis. It automatically selects the most
+recent version of each dataset based on file timestamps, ensuring
+analyses always use the latest available data.
+
+### Inputs
+
+-type: - “af” - “crystal”
+
+### Outputs
+
+The function returns a list containing three data frames:
+
+- UniScoDis95 — dataset corresponding to the 95th percentile threshold
+- UniScoDis75 — dataset corresponding to the 75th percentile threshold
+- UniScoDis50 — dataset corresponding to the 50th percentile threshold
+
+Each dataset:
+
+- is filtered to include only proteins with pLDDT ≥ 70
+- contains protein-level disease and entanglement information
+
+These outputs are used in downstream analyses that compare disease
+association across percentile thresholds.

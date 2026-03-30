@@ -201,6 +201,8 @@ scripts.
 
 ### \*\*a1_2_af_noncov_50th\_<timestamp>\_plot.svg\*\*
 
+### \*\*a1_2_af_noncov_50th\_<timestamp>\_plot.pdf\*\*
+
 Output from `AnalysisCodes/analysis1_2_bh.R`.
 
 Odds ratio plot showing disease class associations with noncovalent
@@ -209,12 +211,16 @@ threshold.
 
 ### \*\*a1_3_type_af_pthr_70\_<timestamp>\_plot.svg\*\*
 
+### \*\*a1_3_type_af_pthr_70\_<timestamp>\_plot.pdf\*\*
+
 Output from `AnalysisCodes/analysis1_3_bh.R`.
 
 Odds ratio plot showing associations between structural entanglement
 metrics and disease status.
 
 ### \*\*mut_q3_af_noncov_50th\_<timestamp>\_plot.svg\*\*
+
+### \*\*mut_q3_af_noncov_50th\_<timestamp>\_plot.pdf\*\*
 
 Output from `AnalysisCodes/analysis_mut_all_cond_q3.R`.
 
@@ -230,6 +236,8 @@ contributions to predicted disease probability for the top 50 entangled
 proteins.
 
 ### **sim_mis_prop_type_af_pthr_70_plot.svg**
+
+### **sim_mis_prop_type_af_pthr_70_plot.pdf**
 
 Output from `AnalysisCodes/sim_mis_prop.R`.
 

@@ -3,17 +3,13 @@ title: "Analysis Codes"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-```
-
 # Overview
 
 This folder contains the analysis scripts used to reproduce the results in the manuscript.
 
 ## Important execution rule (control files)
 
-All scripts except `rf_and_match.R` and `sim_mis_prop` must be run after sourcing their corresponding control file, which defines global parameters (e.g., types, plddt_thresh, option, cov_vec, disease_only). See the [Execution README](Execute/README.html) for a detailed explanation of these parameters.
+All scripts except `analysis_mut_all_cond_q1`, `analysis_mut_all_cond_q3`, `rf_and_match.R` and `sim_mis_prop` must be run after sourcing their corresponding control file, which defines global parameters (e.g., types, option, cov_vec, disease_only). See the [Execution README](Execute/README.html) for a detailed explanation of these parameters.
 
 Recommended: run all analyses using `source(Execute/RunAll.R)`, which sources each control file and then runs the matching analysis script(s) in the correct order.
 
@@ -53,8 +49,8 @@ with scale(Length) + Essential as covariates for all.
 ### Primary outputs
 
 - Results tables:
-  - `Results/Dataframes/a1_1_type_<types>_pthr_<plddt>_<option>_<timestamp>.csv`
-  - `Results/Dataframes/fisher_a1_1_type_<types>_pthr_<plddt>_<option>_<timestamp>.csv`
+  - `Results/Dataframes/a1_1_type_<types>_pthr_70_<option>_<timestamp>.csv`
+  - `Results/Dataframes/fisher_a1_1_type_<types>_pthr_70_<option>_<timestamp>.csv`
 
 ### How it is run
 
@@ -69,13 +65,10 @@ source("AnalysisCodes/analysis1_1bh.R")
 
 ### What it does
 
-- Fits logistic regression models for for each disease class status vs:
-  - Entanglement for Noncovalent Entanglements
-  - Cov_Entanglement for Covalent Entanglements
-  - Knot for Knots
+- Fits logistic regression models for for each disease class status vs Entanglement for Noncovalent Entanglements
   with scale(Length) + Essential as covariates.
 - Applies BH correction to p-values.
-- Produces an OR plot for a filtered subset (AF + noncovalent + 50th) and saves plot values.
+- Produces an OR plot for a filtered subset (AF + 50th) and saves plot values.
 
 ### Primary inputs
 
@@ -84,9 +77,10 @@ source("AnalysisCodes/analysis1_1bh.R")
 ### Primary outputs
 
 - Results table:
-  - `Results/Dataframes/a1_2_type_<types>_pthr_<plddt>_<option>_<timestamp>.csv`
-- Plot (SVG) + plotted values:
+  - `Results/Dataframes/a1_2_type_<types>_pthr_70_<option>_<timestamp>.csv`
+- Plots (SVG/PDF) + plotted values:
   - `Results/Plots/a1_2_af_noncov_50th_<timestamp>_plot.svg`
+  - `Results/Plots/a1_2_af_noncov_50th_<timestamp>_plot.pdf`
   - `Results/Dataframes/a1_2_type_<...>_plot_values_<timestamp>.csv`
 
 ### How it is run
@@ -115,11 +109,12 @@ source("AnalysisCodes/analysis1_2bh.R")
 ### Primary outputs
 
 - Results table:
-  - `Results/Dataframes/a1_3_type_<types>_pthr_<plddt>_<timestamp>.csv`
+  - `Results/Dataframes/a1_3_type_<types>_pthr_70_<timestamp>.csv`
 - 50% plot values:
-  - `Results/Dataframes/a1_3_type_<types>_pthr_<plddt>_<timestamp>_plot_values.csv`
-- OR plot (SVG):
-  - `Results/Plots/a1_3_type_<types>_pthr_<plddt>_<timestamp>_plot.svg`
+  - `Results/Dataframes/a1_3_type_<types>_pthr_70_<timestamp>_plot_values.csv`
+- OR plot (SVG/PDF):
+  - `Results/Plots/a1_3_type_<types>_pthr_70_<timestamp>_plot.svg`
+  - `Results/Plots/a1_3_type_<types>_pthr_70_<timestamp>_plot.pdf`
 
 ### How it is run
 
@@ -146,20 +141,19 @@ source("AnalysisCodes/analysis1_3bh.R")
 
 ### Primary inputs
 
-- Control file: `Execute/Control_m1.R`
+Does NOT require a control file (parameters are set inside the script as written).
 
 ### Primary outputs
 
 - Results table:
-  - `Results/Dataframes/mutation_q1_alltypes_pthr_<plddt>_results_len_res_<timestamp>.csv`
+  - `Results/Dataframes/mutation_q1_alltypes_pthr_70_results_len_res_<timestamp>.csv`
   
 ### How it is run
 
-- Via `Execute/RunAll.R` (recommended), which sources `Execute/Control_m1.R` then runs `analysis_mut_all_cond_q1.R`.
+- Via `Execute/RunAll.R` (recommended), which runs `analysis_mut_all_cond_q1.R`.
 
 If running manually, do:
 ```r
-source("Execute/Control_m1.R")
 source("AnalysisCodes/analysis_mut_all_cond_q1.R")
 ```
 
@@ -180,7 +174,7 @@ source("AnalysisCodes/analysis_mut_all_cond_q1.R")
 ### Primary outputs
 
 - Results table:
-  - `Results/Dataframes/mutation_q2_type_af_pthr_<plddt>_results_len_<timestamp>.csv`
+  - `Results/Dataframes/mutation_q2_type_af_pthr_70_results_len_<timestamp>.csv`
   
 ### How it is run
 
@@ -207,22 +201,22 @@ source("AnalysisCodes/analysis_mut_all_cond_q2.R")
 
 ### Primary inputs
 
-- Control file: `Execute/Control_m3.R`
+Does NOT require a control file (parameters are set inside the script as written).
 
 ### Primary outputs
 
 - Results table:
   - `Results/Dataframes/mutation_q3_type_af_pthr_<plddt>_results_len_<timestamp>.csv`
-- OR plot (SVG):
+- OR plot (SVG/PDF):
   - `Results/Plots/mut_q3_af_noncov_50th_<timestamp>_plot.svg`
+  - `Results/Plots/mut_q3_af_noncov_50th_<timestamp>_plot.pdf`
   
 ### How it is run
 
-- Via `Execute/RunAll.R` (recommended), which sources `Execute/Control_m3.R` then runs `analysis_mut_all_cond_q3.R`.
+- Via `Execute/RunAll.R` (recommended), which runs `analysis_mut_all_cond_q3.R`.
 
 If running manually, do:
 ```r
-source("Execute/Control_m3.R")
 source("AnalysisCodes/analysis_mut_all_cond_q3.R")
 ```
 
@@ -288,8 +282,9 @@ Does NOT require a control file (parameters are set inside the script as written
 - Results table:
   - Results/Dataframes/sim_mis_prop_type_af_pthr_70_<timestamp>_results.csv
     - Contains: Brunner–Munzel statistic and p-value, group medians, and 95% bootstrap CIs.
-- Plot (SVG):
+- Plot (SVG/PDF):
   - Results/Plots/sim_mis_prop_type_af_pthr_70_<timestamp>_plot.svg
+  - Results/Plots/sim_mis_prop_type_af_pthr_70_<timestamp>_plot.pdf
     - Violin plot with median bar comparing misfolding propensity between entangled+disease proteins and matched controls.
   
 ### How it is run

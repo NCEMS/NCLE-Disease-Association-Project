@@ -3,7 +3,7 @@
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("control file input:\n")
 cat("types: af\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # Data Checks
 # Libraries
@@ -44,12 +44,12 @@ user_inputs_to_remove <- unique(repeated_clinvar_pathogenic$User_input)
 # analysis1_1.R -> final_dfA, final_dfB
 ################################################################################
 
-final_df <- read_csv("Data/final_df_af_02_22_2026.csv") # Disease data
+final_df <- read.csv("Data/final_df_af_02_22_2026.csv", check.names = FALSE) # Disease data
 final_dfB <- read.csv("Data/final_dfB_af_02_22_2026.csv") # Entanglement data
 
 # Filter final_dfB by using plddt
 final_dfB <- final_dfB %>%
-  filter(plddt >= plddt_thresh)
+  filter(plddt >= 70)
 
 # Keep only matching proteins in final_df
 final_df <- final_df %>%
@@ -57,7 +57,7 @@ final_df <- final_df %>%
 
 # disease and entanglement data (protein-level)
 final_dfA <- final_df
-final_dfA <- final_dfA[, c("uniprotids", "score", "Entanglement", "95th_percentile", "75th_percentile", "50th_percentile")]
+final_dfA <- final_dfA[, c("uniprotids", "Entanglement", "95th_percentile", "75th_percentile", "50th_percentile")]
 
 # length data (protein-level, from final_dfB)
 length_data <- final_dfB %>%
@@ -169,10 +169,10 @@ protein_summary %>%
 # Save
 write.csv(
   protein_summary,
-  paste0("Data/DataRanInAnalysis/protein_summary_af_", plddt_thresh, "_", Sys.Date(), ".csv"),
+  paste0("Data/DataRanInAnalysis/protein_summary_af_70_", Sys.Date(), ".csv"),
   row.names = FALSE
 )
 
-rm(list = setdiff(ls(), c("protein_summary", "plddt_thresh", "disease_only")))
+rm(list = setdiff(ls(), c("protein_summary", "disease_only")))
 
 

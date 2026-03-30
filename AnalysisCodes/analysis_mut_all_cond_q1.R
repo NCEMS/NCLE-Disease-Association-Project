@@ -5,7 +5,7 @@
 ## parsing af_control_mutation.R ##
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("type: af \n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # Libraries
 library(dplyr)
@@ -77,7 +77,7 @@ coef_table_len_res <- coef_table_len_res[, c("Variable", "Estimate", "Odds_Ratio
                                              "Std. Error", "z value", "Pr(>|z|)")]
 
 # Build per-type output file name (not written because write.csv is commented out)
-fileName <- paste("mutation_q1_type_af_pthr_", plddt_thresh, sep = "")
+fileName <- paste("mutation_q1_type_af_pthr_70", sep = "")
 final_output_file <- paste0(
   "results/dataframes/", fileName,
   "_results_len_res_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".csv"
@@ -85,8 +85,7 @@ final_output_file <- paste0(
 
 # Save
 combined_file <- paste0(
-  "Results/Dataframes/mutation_q1_alltypes_pthr_",
-  plddt_thresh, "_results_len_res_",
+  "Results/Dataframes/mutation_q1_alltypes_pthr_70_results_len_res_",
   format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".csv"
 )
 write.csv(coef_table_len_res, combined_file, row.names = FALSE)

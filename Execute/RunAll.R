@@ -15,7 +15,6 @@ source("Execute/LogRunAnalysis1_3.R")
 
 # Analysis m1
 remove(list=ls())
-source("Execute/Control_m1.R")
 source("Execute/LogRunAnalysis_m1.R")
 
 # Analysis m2
@@ -25,7 +24,6 @@ source("Execute/LogRunAnalysis_m2.R")
 
 # Analysis m3
 remove(list=ls())
-source("Execute/Control_m3.R")
 source("Execute/LogRunAnalysis_m3.R")
 
 # Delta and Match

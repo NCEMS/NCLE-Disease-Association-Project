@@ -5,10 +5,10 @@
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("control file input: Control1_3\n")
 cat("type(s):", paste(types, collapse = "_and_"), "\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # output file names
-fileName <- paste("a1_3_type_", paste(types, collapse = "_and_"), "_pthr_", plddt_thresh, sep = "")
+fileName <- paste("a1_3_type_", paste(types, collapse = "_and_"), "_pthr_70", sep = "")
 
 # Libraries
 library(dplyr)
@@ -20,6 +20,14 @@ library(grid)
 
 result4slen_all <- list()   # Store results per type (af/crystal) before combining
 
+percentile_map <- c(
+  "50%" = "50th_percentile",
+  "75%" = "75th_percentile",
+  "95%" = "95th_percentile"
+)
+
+percentiles <- c("50%", "75%", "95%")
+
 # Loop over each dataset type requested (e.g., "af", "crystal")
 for (cur_type in types) {
 
@@ -27,7 +35,7 @@ for (cur_type in types) {
 
   # disease and entanglement association per disease MSH class data
   source("Functions/dataProcessing_df.R") # will load function that will load ent and disease data
-  dfs <- dataProcessing_df(type, plddt_thresh) # function loaded to retrieve ent and disease data
+  dfs <- dataProcessing_df(type, 70) # function loaded to retrieve ent and disease data
   final_dfA <- dfs$final_dfA # disease data
   final_dfB <- dfs$final_dfB # entanglement data
 
@@ -40,7 +48,7 @@ for (cur_type in types) {
   # If analyzing covalent, rebuild Entanglement status from covalent column
   if (identical(cov_vec, "covalent")) {
 
-    keep_cols <- c("gene", "Length", "plddt", "Essential")
+    keep_cols <- c("gene", "Length", "Essential")
 
     rows_to_blank <- !(final_dfB$CCBond %in% "True") # Rows where CCBond is NOT true
     cols_to_blank <- setdiff(names(final_dfB), keep_cols) # All metric columns that should be blanked out
@@ -77,7 +85,6 @@ for (cur_type in types) {
 
   # Function where metric like Gmax and Gsum are created
   source("Functions/dataProcessing_df_analysis_3.R")
-  percentiles <- rev(percentiles) # Reverse order so first iteration is the 50th threshold
   ######################################
   # Confounders per gene from final_dfB
   confounders <- final_dfB %>%
@@ -90,11 +97,13 @@ for (cur_type in types) {
       Essential = factor(Essential, levels = c("No", "NT", "Yes"))
     )
 
-  # Create gene-level disease score: max(score) per UniProt ID (gene)
+  # Create gene-level disease
   gene_scores <- final_dfA %>%
     group_by(uniprotids) %>%
     summarise(
-      score = max(score, na.rm = TRUE),
+      `50th_percentile` = ifelse(any(`50th_percentile` == "Yes"), "Yes", "No"),
+      `75th_percentile` = ifelse(any(`75th_percentile` == "Yes"), "Yes", "No"),
+      `95th_percentile` = ifelse(any(`95th_percentile` == "Yes"), "Yes", "No"),
       .groups = "drop"
     ) %>%
     rename(gene = uniprotids)
@@ -136,7 +145,7 @@ for (cur_type in types) {
     ) %>%
     mutate(across(all_of(metrics_no_length), ~replace_na(., 0)))
 
-  # Add confounders and disease scores to the gene-level metrics table
+  # Add confounders and disease to the gene-level metrics table
   final_dfB_max <- final_dfB_max %>%
     left_join(confounders, by = "gene") %>%
     left_join(gene_scores, by = "gene")
@@ -160,7 +169,7 @@ for (cur_type in types) {
   df_G_ent_slen <- setNames(
     lapply(metrics_no_length, function(m) { # Loop over each metric
       final_dfB_max %>%
-        select(gene, !!sym(m), Length, Essential, score) # Select the gene ID, the current metric column, protein length, essentiality, and disease score
+        select(gene, !!sym(m), Length, Essential, `50th_percentile`, `75th_percentile`, `95th_percentile`) # Select the gene ID, the current metric column, protein length, essentiality, and disease
     }),
     metrics_no_length # Name each list element using the corresponding metric name
   )
@@ -175,8 +184,11 @@ for (cur_type in types) {
   for (i in 1:length(percentiles)) { # Loop over each percentile threshold (e.g., 95%, 75%, 50%)
 
     # Logistic Regression for each metric + Length
-    logit_length <- function(df, metric, score_thresh) {
-      df$disease_association <- ifelse(df$score >= score_thresh, 1, 0)
+    logit_length <- function(df, metric) {
+      df$disease_association <- ifelse(
+        df[[percentile_map[percentiles[i]]]] == "Yes",
+        1, 0
+      )
 
       # Apply "Remove" rule for i > 1
       if (remove_mode && i != 1L) {
@@ -189,7 +201,7 @@ for (cur_type in types) {
       mask0 <- (df$disease_association == 0L)
 
       # Counts
-      cat("Unique genes not disease-associated at", names(percentiles)[i], ":",
+      cat("Unique genes not disease-associated at", percentiles[i], ":",
           dplyr::n_distinct(df$gene[mask0]),
           "\n")
       print(table(df$disease_association))
@@ -212,18 +224,21 @@ for (cur_type in types) {
 
     # At i == 1, cache which genes are disease-associated under the first (50th) threshold
     if (i == 1L) {
-      thr <- as.numeric(percentiles[ i ][[1]])
       fdu <- final_df_updated
-      pos_uniprots_i1 <- unique(fdu$gene[fdu$score >= thr])
-      pos_uniprots_i1_not <- unique(fdu$gene[fdu$score < thr])
-      message(length(pos_uniprots_i1), " disease associated genes at ", names(percentiles)[i], " (thr=", thr, ")")
-      message(length(pos_uniprots_i1_not), " not disease associated genes at ", names(percentiles)[i], " (thr=", thr, ")")
+      perc_name <- percentiles[i]                      # "50%"
+      col_name <- percentile_map[perc_name]            # "50th_percentile"
+
+      pos_uniprots_i1 <- unique(fdu$gene[fdu[[col_name]] == "Yes"])
+      pos_uniprots_i1_not <- unique(fdu$gene[fdu[[col_name]] == "No"])
+
+      message(length(pos_uniprots_i1), " disease associated genes at ", perc_name)
+      message(length(pos_uniprots_i1_not), " not disease associated genes at ", perc_name)
     }
     # -------------------------------------------------------------------------------
     # For each metric-specific data frame in df_G_ent_slen,
     # run a logistic regression that includes scaled length
     out_logit_slength <- lapply(names(df_G_ent_slen), function(metric) {
-      logit_length(df_G_ent_slen[[metric]], metric, score_thresh = percentiles[i])
+      logit_length(df_G_ent_slen[[metric]], metric)
     })
 
     # Combine the list of regression outputs into a single data frame
@@ -235,7 +250,7 @@ for (cur_type in types) {
 
 
     # Add a column indicating which percentile threshold was used
-    out_logit_slength$percentile <- names(percentiles[i])
+    out_logit_slength$percentile <- percentiles[i]
 
     # Store the combined results for this percentile iteration in the results list
     result4slen_list[[i]] <- out_logit_slength
@@ -322,21 +337,15 @@ p <- ggplot(
     color = Significant
   )
 ) +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.8) +
-  geom_point(size = 2.6, stroke = 1.0) +
-  geom_errorbarh(                       # <-- match 2nd plot orientation/style
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 1.2) +
+  geom_point(size = 4.2, stroke = 1.2) +
+  geom_errorbarh(
     aes(xmin = CI_Lower, xmax = CI_Upper),
-    height = 0.2,
-    linewidth = 0.8
+    height = 0.22,
+    linewidth = 1.2
   ) +
-  scale_shape_manual(
-    values = c("TRUE" = 1, "FALSE" = 16),
-    labels = c("FALSE" = "Not significant", "TRUE" = "Significant")
-  ) +
-  scale_color_manual(
-    values = c("TRUE" = "black", "FALSE" = "red"),
-    labels = c("FALSE" = "Not significant", "TRUE" = "Significant")
-  ) +
+  scale_shape_manual(values = c("TRUE" = 1, "FALSE" = 16)) +
+  scale_color_manual(values = c("TRUE" = "black", "FALSE" = "red")) +
   scale_x_continuous(
     limits = c(x_min, x_max),
     breaks = seq(x_min, x_max, by = 0.2),
@@ -347,44 +356,33 @@ p <- ggplot(
       lab <- label_map[x]
       lab[is.na(lab)] <- x[is.na(lab)]
       parse(text = lab)
-    }
+    },
+    expand = expansion(add = 0.35)
   ) +
   labs(
     y = "Entanglement Metric",
-    x = "Odds Ratio",
-    color = "p-value Significance",
-    shape = "p-value Significance"
+    x = "Odds Ratio"
   ) +
   theme_bw() +
   theme(
     text = element_text(family = "Arial"),
     panel.grid = element_blank(),
     panel.border = element_blank(),
+    axis.line = element_line(color = "black", linewidth = 1),
 
-    axis.line = element_line(color = "black", linewidth = 0.8),
+    axis.text.x  = element_text(size = 18, color = "black"),
+    axis.text.y  = element_text(size = 18, color = "black", lineheight = 1),
+    axis.title.x = element_text(size = 22, color = "black"),
+    axis.title.y = element_text(size = 22, color = "black"),
 
-    # match 2nd plot sizing
-    axis.text  = element_text(size = 7, color = "black"),
-    axis.title = element_text(size = 9, color = "black"),
+    axis.ticks = element_line(color = "black", linewidth = 1),
+    axis.ticks.length = unit(8, "pt"),
 
-    axis.ticks = element_line(color = "black", linewidth = 0.8),
-    axis.ticks.length = unit(6, "pt"),
+    legend.position = "none",
 
-    # match 2nd plot square look
-    aspect.ratio = 1,
-
-    # legend inside bottom-right
-    legend.position = c(0.98, 0.02),
-    legend.justification = c(1, 0),
-    legend.background = element_blank(),
-    legend.key = element_blank(),
-    legend.text  = element_text(size = 6),
-    legend.title = element_text(size = 7),
-
-    plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10, unit = "pt")
+    plot.margin = ggplot2::margin(t = 12, r = 20, b = 12, l = 35, unit = "pt")
   )
 
-# Save
 ggsave(
   filename = paste0(
     "Results/Plots/", fileName,
@@ -393,7 +391,20 @@ ggsave(
   ),
   plot   = p,
   device = svglite::svglite,
-  width  = 7,
-  height = 7,
+  width  = 11,
+  height = 10,
+  units  = "in"
+)
+
+ggsave(
+  filename = paste0(
+    "Results/Plots/", fileName,
+    format(Sys.time(), "_%Y-%m-%d_%H-%M-%S"),
+    "_plot.pdf"
+  ),
+  plot   = p + theme(text = element_text(family = "sans")),
+  device = cairo_pdf,
+  width  = 11,
+  height = 10,
   units  = "in"
 )

@@ -33,14 +33,13 @@ objects persist between runs.
 
 The example below shows the parameter values used for the analyses in
 this study. These values can be modified to run the analysis under
-different settings (e.g., using crystal structures instead of AlphaFold,
-or applying a different pLDDT threshold).
+different settings (e.g., using crystal structures instead of
+AlphaFold).
 
 ``` r
 remove(list=ls())
 
 types         <- c("af")
-plddt_thresh  <- 70
 option        <- "remove"
 ```
 
@@ -53,12 +52,6 @@ Used for `AnalysisCodes/analysis1_1_bh.R`
   - Options: “af” or “crystal”
 
   - Determines which structural dataset is used.
-
-- plddt_thresh
-
-  - Range: 0–100
-
-  - Filters proteins based on structure confidence.
 
 - option
 
@@ -80,15 +73,13 @@ Used for `AnalysisCodes/analysis1_1_bh.R`
 
 The example below shows the parameter values used for the analyses in
 this study. These values can be modified to run the analysis under
-different settings (e.g., using crystal structures instead of AlphaFold,
-or applying a different pLDDT threshold).
+different settings (e.g., using crystal structures instead of
+AlphaFold).
 
 ``` r
 remove(list=ls())
 
-cov_vec <- "noncovalent"
 types <- c("af")
-plddt_thresh <- 70
 option <- "remove"
 ```
 
@@ -101,16 +92,6 @@ models).
 
   - “af” or “crystal”
 
-- cov_vec
-
-  - “noncovalent”
-
-  - “covalent”
-
-- plddt_thresh
-
-  - Range: 0–100
-
 - option
 
   - “remove” or “keep” (same interpretation as above)
@@ -119,15 +100,14 @@ models).
 
 The example below shows the parameter values used for the analyses in
 this study. These values can be modified to run the analysis under
-different settings (e.g., using crystal structures instead of AlphaFold,
-or applying a different pLDDT threshold).
+different settings (e.g., using crystal structures instead of
+AlphaFold).
 
 ``` r
 remove(list=ls())
 
 cov_vec <- "noncovalent"
 types <- c("af")
-plddt_thresh <- 70
 option <- "remove"
 ```
 
@@ -146,36 +126,32 @@ metrics).
 
   - “covalent”
 
-- plddt_thresh
-
-  - Range: 0–100
-
 - option
 
   - “remove” or “keep”
 
-## Control_m1.R, Control_m2.R, Control_m3.R
+## Control_m2.R
 
 The example below shows the parameter value used for the analyses in
-this study. This value can be modified to run the analysis under
-different settings (e.g., applying a different pLDDT threshold).
+this study. The disease_only parameter controls whether the dataset is
+restricted to proteins that are disease-associated based on DisGeNET
+data. When set to “yes”, the data are subset to include only proteins
+that meet the 50th percentile threshold. When set to “no”, no subsetting
+is performed and all proteins are retained.
 
 ``` r
 remove(list=ls())
 
-plddt_thresh  <- 70
+disease_only <- "no"
 ```
 
-Used for mutation analyses
-`AnalysisCodes/analysis_1_2_bh_mut_all_cond_q1.R`,
-`AnalysisCodes/analysis_1_2_bh_mut_all_cond_q2.R` and
-`AnalysisCodes/analysis_1_2_bh_mut_all_cond_q3.R`.
+Used for `AnalysisCodes/analysis_1_2_bh_mut_all_cond_q2.R`.
 
 ### Parameters:
 
-- plddt_thresh
+- disease_only
 
-  - Range: 0–100
+  - “yes” or “no”
 
 # LogRun Files
 
@@ -198,8 +174,6 @@ The following are captured in the log files:
 The log file name includes:
 
 - Dataset type (e.g., AF or crystal)
-
-- pLDDT threshold
 
 - Analysis identifier
 

@@ -3,10 +3,6 @@ title: "Natively-Entangled-Proteins-Linked-to-Human-Disease"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-```
-
 # Overview
 
 This repository contains the code needed to reproduce the results in Natively Entangled proteins are linked to human disease and pathogenic mutations likely due to misfolding.
@@ -36,18 +32,42 @@ Each folder contains its own README describing what belongs there and how to use
 
 ## Environment setup
 
-This project uses `renv` to manage the R environment and ensure reproducibility.
-The file `renv.lock` records the exact versions of all R packages used when the analyses were run.
+All analyses in this repository were run using:
 
-To recreate the project environment, run the following commands from the root of the repository:
+R version: 4.2.1
 
-```r
-install.packages("renv")
-renv::restore()
-```
-This will automatically install all required packages and reproduce the exact package versions used in the analyses.
+To ensure full reproducibility, all package dependencies and versions used in this project have been recorded:
 
-The package versions used in the project are recorded in `renv.lock`.
+- `SetUp/All_PackageUsage.csv`: Contains all packages used per analysis, including the specific version loaded during each run.
+- `SetUp/Unique_Package_Versions.csv`: Contains the unique set of packages and versions required across all analyses.
+
+These files allow users to reconstruct the exact software environment used for the study.
+
+Before running the analyses, install the required packages (using the versions listed in the files above where possible).
+
+## Data access (CyVerse)
+
+The full datasets required to run these analyses are not included in this repository due to their large size. Instead, they are hosted on CyVerse.
+
+1. Create an account
+
+Create a free CyVerse account:
+https://user.cyverse.org/signup
+
+2. Access and download the data
+
+Once your account is created and verified, you will be able to access the project data through the CyVerse Data Store at the following location:
+
+[PLACEHOLDER: CyVerse data link]
+
+3. Recommended: download using GO commands
+
+For large datasets, we strongly recommend using CyVerse GO commands (iCommands) rather than downloading through the browser.
+
+Install GO commands
+
+Follow the official installation guide:
+https://learning.cyverse.org/ds/gocommands/installation/
 
 ## How to run
 
@@ -69,7 +89,7 @@ Ensure your working directory is set to the **root of the repository** before ru
 
 1. Open `Execute/RunAll.R`.
 2. Identify the analysis block(s) you want to run (e.g., Analysis 1.1, 1.2, 1.3, m1–m3, matching).
-3. **Adjust the corresponding control file(s)** in `Execute/` (e.g., `Control1_1.R`, `Control_m2.R`) if you need to change thresholds, dataset types, or other parameters available.
+3. **Adjust the corresponding control file(s)** in `Execute/` (e.g., `Control1_1.R`, `Control_m2.R`) if you need to change dataset types, or other parameters available.
 4. Run only the block(s) you need.
 
 ## Runtime and computational resources

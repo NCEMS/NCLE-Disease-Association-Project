@@ -3,10 +3,6 @@ title: "Execute"
 output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-```
-
 # Overview
 
 The `Execute` folder contains all scripts responsible for running the analyses in a controlled and reproducible way. It separates parameter definition (Control files), execution with logging (LogRun files), and full pipeline orchestration (`RunAll.R`). Each analysis is executed by first defining global parameters in a control file and then running the corresponding analysis script through a logging wrapper that captures all console output in a timestamped log file. This structure ensures reproducibility, clean environments between analyses, and full traceability of model runs.
@@ -27,13 +23,12 @@ Each Control file defines the parameters used in a specific analysis. All Contro
 
 ## Control1_1.R
 
-The example below shows the parameter values used for the analyses in this study. These values can be modified to run the analysis under different settings (e.g., using crystal structures instead of AlphaFold, or applying a different pLDDT threshold).
+The example below shows the parameter values used for the analyses in this study. These values can be modified to run the analysis under different settings (e.g., using crystal structures instead of AlphaFold).
 
 ```r
 remove(list=ls())
 
 types         <- c("af")
-plddt_thresh  <- 70
 option        <- "remove"
 ```
 
@@ -47,12 +42,6 @@ Used for `AnalysisCodes/analysis1_1_bh.R`
 
   - Determines which structural dataset is used.
 
-- plddt_thresh
-
-  - Range: 0–100
-
-  - Filters proteins based on structure confidence.
-
 - option
 
   - "remove": proteins that are disease-associated at a lower percentile but not at a higher percentile are removed from the dataset for the higher-percentile analysis. For example, if a protein is disease-associated at the 50th percentile but not at the 75th, it is removed when running the 75th-percentile analysis; if it is disease-associated at the 50th and 75th but not at the 95th, it is removed for the 95th-percentile analysis. This approach keeps the “not disease-associated” group identical across percentile analyse.
@@ -61,14 +50,12 @@ Used for `AnalysisCodes/analysis1_1_bh.R`
 
 ## Control1_2.R
 
-The example below shows the parameter values used for the analyses in this study. These values can be modified to run the analysis under different settings (e.g., using crystal structures instead of AlphaFold, or applying a different pLDDT threshold).
+The example below shows the parameter values used for the analyses in this study. These values can be modified to run the analysis under different settings (e.g., using crystal structures instead of AlphaFold).
 
 ```r
 remove(list=ls())
 
-cov_vec <- "noncovalent"
 types <- c("af")
-plddt_thresh <- 70
 option <- "remove"
 ```
 
@@ -80,30 +67,19 @@ Used for `AnalysisCodes/analysis1_2_bh.R` (disease-class-specific models).
 
   - "af" or "crystal"
 
-- cov_vec
-
-  - "noncovalent"
-
-  - "covalent"
-
-- plddt_thresh
-
-  - Range: 0–100
-
 - option
 
   - "remove" or "keep" (same interpretation as above)
 
 ## Control1_3.R
 
-The example below shows the parameter values used for the analyses in this study. These values can be modified to run the analysis under different settings (e.g., using crystal structures instead of AlphaFold, or applying a different pLDDT threshold).
+The example below shows the parameter values used for the analyses in this study. These values can be modified to run the analysis under different settings (e.g., using crystal structures instead of AlphaFold).
 
 ```r
 remove(list=ls())
 
 cov_vec <- "noncovalent"
 types <- c("af")
-plddt_thresh <- 70
 option <- "remove"
 ```
 
@@ -121,31 +97,27 @@ Used for `AnalysisCodes/analysis1_3_bh.R` (protein-level entanglement metrics).
 
   - "covalent"
 
-- plddt_thresh
-
-  - Range: 0–100
-
 - option
 
   - "remove" or "keep"
 
-## Control_m1.R, Control_m2.R, Control_m3.R
+## Control_m2.R
 
-The example below shows the parameter value used for the analyses in this study. This value can be modified to run the analysis under different settings (e.g., applying a different pLDDT threshold).
+The example below shows the parameter value used for the analyses in this study. The disease_only parameter controls whether the dataset is restricted to proteins that are disease-associated based on DisGeNET data. When set to "yes", the data are subset to include only proteins that meet the 50th percentile threshold. When set to "no", no subsetting is performed and all proteins are retained.
 
 ```r
 remove(list=ls())
 
-plddt_thresh  <- 70
+disease_only <- "no"
 ```
 
-Used for mutation analyses `AnalysisCodes/analysis_1_2_bh_mut_all_cond_q1.R`, `AnalysisCodes/analysis_1_2_bh_mut_all_cond_q2.R` and `AnalysisCodes/analysis_1_2_bh_mut_all_cond_q3.R`.
+Used for `AnalysisCodes/analysis_1_2_bh_mut_all_cond_q2.R`.
 
 ### Parameters:
 
-- plddt_thresh
+- disease_only
 
-  - Range: 0–100
+  - "yes" or "no"
 
 # LogRun Files
 
@@ -164,8 +136,6 @@ The following are captured in the log files:
 The log file name includes:
 
 - Dataset type (e.g., AF or crystal)
-
-- pLDDT threshold
 
 - Analysis identifier
 

@@ -119,8 +119,6 @@ p <- ggplot(plot_df, aes(x = Group, y = Misfolding)) +
     plot.margin = ggplot2::margin(10, 10, 10, 10)
   )
 
-p
-
 # Save plot
 ggsave(
   filename = paste0("Results/Plots/", fileName, "_plot.svg"),
@@ -128,3 +126,11 @@ ggsave(
   width = 6,
   height = 6
 )
+
+ggsave(
+  filename = paste0("Results/Plots/", fileName, "_plot.pdf"),
+  plot = p,
+  width = 6,
+  height = 6
+)
+

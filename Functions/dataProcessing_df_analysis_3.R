@@ -2,16 +2,6 @@
 library(dplyr)
 library(stringr)
 
-
-#### Disgenet Score Percentiles ####
-# Used to calculate percentiles from "raw" disgenet results
-sub_finalA <- final_dfA[,c("Association_ID","score")]
-sub_finalA <- unique(sub_finalA)
-sub_finalA <- sub_finalA[sub_finalA$Association_ID>0,]
-# Calculate score percentiles
-percentiles <- quantile(sub_finalA$score, c(0.95, 0.75, 0.50))
-rm(sub_finalA)
-
 #### Create a data frame final_df_updated ####
 
 # Absolute value of Gn and Gc
@@ -19,7 +9,7 @@ final_dfB$Gn <- abs(final_dfB$Gn)
 final_dfB$Gc <- abs(final_dfB$Gc)
 
 # Subset necessary columns
-UniScoDis <- final_dfA[, c("uniprotids", "score")]
+UniScoDis <- final_dfA[, c("uniprotids", "50th_percentile", "75th_percentile", "95th_percentile")]
 
 # Remove duplicates
 UniScoDis <- distinct(UniScoDis)
@@ -27,8 +17,12 @@ UniScoDis <- distinct(UniScoDis)
 # Keep Uniprots with the highest score
 max_df <- UniScoDis %>%
   group_by(uniprotids) %>%
-  filter(score == max(score)) %>%
-  ungroup()
+  summarise(
+    `50th_percentile` = ifelse(any(`50th_percentile` == "Yes"), "Yes", "No"),
+    `75th_percentile` = ifelse(any(`75th_percentile` == "Yes"), "Yes", "No"),
+    `95th_percentile` = ifelse(any(`95th_percentile` == "Yes"), "Yes", "No"),
+    .groups = "drop"
+  )
 
 # Perform a left join to include the entanglement data
 colnames(max_df)[1] <- "gene"

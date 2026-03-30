@@ -2,7 +2,7 @@
 
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("type: af\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # Libraries
 library(dplyr)                        # data manipulation (pipes, group_by, summarise, joins)
@@ -52,19 +52,19 @@ ent_dat_clean <- af_ent_dat_clean
 # analysis1_1.R -> final_dfA, final_dfB
 ################################################################################
 
-final_dfA <- read_csv("Data/final_df_af_02_22_2026.csv") # Disease data
+final_dfA <- read.csv("Data/final_df_af_02_22_2026.csv", check.names = FALSE) # Disease data
 final_dfB <- read.csv("Data/final_dfB_af_02_22_2026.csv") # Entanglement data
 
 # Filter final_dfB by using plddt
 final_dfB <- final_dfB %>%
-  filter(plddt >= plddt_thresh)
+  filter(plddt >= 70)
 
 # Keep only matching proteins in final_df
 final_dfA <- final_dfA %>%
   filter(uniprotids %in% final_dfB$gene)
 
 # disease and entanglement data (protein-level)
-final_dfA <- final_dfA[, c("uniprotids", "score", "Entanglement", "95th_percentile", "75th_percentile", "50th_percentile", "Length", "Essential")]
+final_dfA <- final_dfA[, c("uniprotids", "Entanglement", "95th_percentile", "75th_percentile", "50th_percentile", "Length", "Essential")]
 
 # length and essentiality data (protein-level)
 length_data <- final_dfA %>%
@@ -137,11 +137,10 @@ res_dt <- res_dt[uniprotids %in% valid_uniprotids]
 final_dfA_dt <- as.data.table(final_dfA)
 
 # Collapse to one protein-level row per uniprotid
-# (score, entanglement flags, percentiles, length, entangled region list)
+# (entanglement flags, percentiles, length, entangled region list)
 gene_dt <- final_dfA_dt[
   ,
   .(
-    score             = score[1],
     Entanglement      = Entanglement[1],
     `95th_percentile` = `95th_percentile`[1],
     `75th_percentile` = `75th_percentile`[1],
@@ -206,7 +205,7 @@ res_merged_dt[, in_region := {                                          # create
 
 saveRDS(
   res_merged_dt,
-  paste0("Data/DataRanInAnalysis/res_merged_dt_af_", plddt_thresh, "_", Sys.Date(), ".rds")
+  paste0("Data/DataRanInAnalysis/res_merged_dt_af_70_", Sys.Date(), ".rds")
 )
 
 res_merged_dt_csv <- res_merged_dt
@@ -218,9 +217,9 @@ res_merged_dt_csv$numeric_EntRegion <- sapply(
 write.csv(
   res_merged_dt_csv,
   paste0(
-    "Data/DataRanInAnalysis/res_merged_dt_af_", plddt_thresh, "_", Sys.Date(), ".csv"
+    "Data/DataRanInAnalysis/res_merged_dt_af_70_", Sys.Date(), ".csv"
   ),
   row.names = FALSE
 )
 
-rm(list = setdiff(ls(), c("res_merged_dt", "plddt_thresh")))
+rm(list = setdiff(ls(), "res_merged_dt"))

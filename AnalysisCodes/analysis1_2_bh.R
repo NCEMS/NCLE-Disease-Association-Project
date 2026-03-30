@@ -4,14 +4,15 @@
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("control file input: Control1_2\n")
 cat("type(s):", paste(types, collapse = "_and_"), "\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # output file names
-(fileName = paste("a1_2_type_", paste(types, collapse = "_and_"), "_pthr_", plddt_thresh, "_", option, sep=""))
+(fileName = paste("a1_2_type_", paste(types, collapse = "_and_"), "_pthr_70_", option, sep=""))
 
 # libraries
 library(dplyr)
 library(broom)
+library(grid)
 library(stringr)
 library(ggplot2)
 library(svglite)
@@ -22,47 +23,9 @@ data_list <- list()
 fileNames <- character(0)
 
 # function to run analysis
-run_one <- function(type, cov_type, plddt_thresh) {
+run_one <- function(type, plddt_thresh) {
   # disease and entanglement association per disease MSH class data
-  source("Functions/dataProcessing_df.R") # will load function that will load ent and disease data
-  dfs <- dataProcessing_df(type, plddt_thresh) # function loaded to retrieve ent and disease data
-  final_dfA <- dfs$final_dfA # disease data
-  final_dfB <- dfs$final_dfB # entanglement data
-
-  # Swap in alternative “entanglement-like” predictors depending on cov_type
-  if (identical(cov_type, "covalent")) {
-    final_dfA$Entanglement <- final_dfA$Cov_Entanglement
-    final_dfB$Entanglement <- final_dfB$Cov_Entanglement
-  } else if (identical(cov_type, "knot")) {
-    final_dfA$Entanglement <- final_dfA$Knot
-    final_dfB$Entanglement <- final_dfB$Knot
-  }
-  # Otherwise (e.g., "noncovalent"), keep Entanglement as-is
-
-  #### Disgenet Score Percentiles ####
-  # Used to calculate percentiles from "raw" disgenet results
-  sub_finalA <- final_dfA[,c("Association_ID","score")]
-  sub_finalA <- unique(sub_finalA) # Drop duplicate Association_ID-score pairs
-  sub_finalA <- sub_finalA[sub_finalA$Association_ID>0,] # Keep DisGeNET rows
-  # Calculate score percentiles
-  percentiles <- quantile(sub_finalA$score, c(0.95, 0.75, 0.50))
-  rm(sub_finalA) # Remove temporary object to save memory
-
-  ### Prepare a dataframe for contingency tables (one per disease class) ####
-  # Subset necessary columns
-  UniScoDis <- final_dfA[, c("uniprotids", "score","diseaseClasses_MSH", "Entanglement")]
-
-  # Remove duplicates
-  UniScoDis <- distinct(UniScoDis)
-
-  # pull out lengths and essentiality per uniprot ID
-  length_df <- final_dfB %>%
-    select(gene, Length, Essential) %>%
-    distinct()
-
-  # join onto final_df
-  UniScoDis <- UniScoDis %>%
-    left_join(length_df, by = c("uniprotids" = "gene")) # Add Length/Essential per protein
+  source("Functions/dataProcessingClass.R") # will load function that will load ent and disease data
 
   # List of all disease classes
   all_disease_classes <- c(
@@ -91,72 +54,11 @@ run_one <- function(type, cov_type, plddt_thresh) {
     "Mental Disorders (F03)"
   )
 
-  # Function to create new columns based on disease class codes
-  create_disease_columns <- function(data, disease_classes) {
-    # For each disease class, create a column:
-    #   - value = score if that class code appears in diseaseClasses_MSH
-    #   - value = 0 otherwise
-    for (disease_class in disease_classes) {
-      # extract code part of disease_class e.g., (C01)
-      code <- str_extract(disease_class, "\\([CF]\\d+\\)")
-      # create a new column
-      # where each element = score if the code is in diseaseClasses_MSH, o/w 0
-      data[[disease_class]] <- ifelse(grepl(code, data$diseaseClasses_MSH), data$score, 0)
-    }
-    return(data)
-  }
+  out <- dataProcessing_UniScoDis(type = type)
 
-  # Call the function to add columns
-  UniScoDis <- create_disease_columns(UniScoDis, all_disease_classes)
-
-
-  # Remove the score and diseaseClasses_MSH columns
-  UniScoDis <- subset(UniScoDis, select = -c(score, diseaseClasses_MSH))
-
-  # Group by uniprotids and calculate maximum scores for each disease class
-  max_scores <- UniScoDis %>%
-    group_by(uniprotids) %>%
-    mutate(
-      `Digestive System Diseases (C06)` = max(`Digestive System Diseases (C06)`),
-      `Neoplasms (C04)` = max(`Neoplasms (C04)`),
-      `Pathological Conditions, Signs and Symptoms (C23)` = max(`Pathological Conditions, Signs and Symptoms (C23)`),
-      `Congenital, Hereditary, and Neonatal Diseases and Abnormalities (C16)` = max(`Congenital, Hereditary, and Neonatal Diseases and Abnormalities (C16)`),
-      `Endocrine System Diseases (C19)` = max(`Endocrine System Diseases (C19)`),
-      `Urogenital Diseases (C12)` = max(`Urogenital Diseases (C12)`),
-      `Respiratory Tract Diseases (C08)` = max(`Respiratory Tract Diseases (C08)`),
-      `Nervous System Diseases (C10)` = max(`Nervous System Diseases (C10)`),
-      `Nutritional and Metabolic Diseases (C18)` = max(`Nutritional and Metabolic Diseases (C18)`),
-      `Stomatognathic Diseases (C07)` = max(`Stomatognathic Diseases (C07)`),
-      `Eye Diseases (C11)` = max(`Eye Diseases (C11)`),
-      `Musculoskeletal Diseases (C05)` = max(`Musculoskeletal Diseases (C05)`),
-      `Cardiovascular Diseases (C14)` = max(`Cardiovascular Diseases (C14)`),
-      `Infections (C01)` = max(`Infections (C01)`),
-      `Immune System Diseases (C20)` = max(`Immune System Diseases (C20)`),
-      `Skin and Connective Tissue Diseases (C17)` = max(`Skin and Connective Tissue Diseases (C17)`),
-      `Otorhinolaryngologic Diseases (C09)` = max(`Otorhinolaryngologic Diseases (C09)`),
-      `Hemic and Lymphatic Diseases (C15)` = max(`Hemic and Lymphatic Diseases (C15)`),
-      `Mental Disorders (F03)` = max(`Mental Disorders (F03)`),
-      `Behavior and Behavior Mechanisms (F01)` = max(`Behavior and Behavior Mechanisms (F01)`),
-      `Chemically-Induced Disorders (C25)` = max(`Chemically-Induced Disorders (C25)`),
-      `Psychological Phenomena (F02)` = max(`Psychological Phenomena (F02)`),
-      `Disorders of Environmental Origin (C21)` = max(`Disorders of Environmental Origin (C21)`)
-    ) %>%
-    distinct() # Keep one row per protein after max-ing
-
-  #### Prepare data frames for Contingency tables ####
-
-  # if score>=thresh, disease == "Yes"
-  convert_to_yes_no <- function(value, thresh) {
-    ifelse(value >= thresh, "Yes", "No")
-  }
-
-  # Apply the function to all disease class columns columns
-  UniScoDis95 <- max_scores %>%
-    mutate(across(all_of(all_disease_classes), ~convert_to_yes_no(., percentiles[1])))
-  UniScoDis75 <- max_scores %>%
-    mutate(across(all_of(all_disease_classes), ~convert_to_yes_no(., percentiles[2])))
-  UniScoDis50 <- max_scores %>%
-    mutate(across(all_of(all_disease_classes), ~convert_to_yes_no(., percentiles[3])))
+  UniScoDis95 <- out$UniScoDis95
+  UniScoDis75 <- out$UniScoDis75
+  UniScoDis50 <- out$UniScoDis50
 
   # vector of class-column names
   class_cols <- all_disease_classes
@@ -303,14 +205,14 @@ run_one <- function(type, cov_type, plddt_thresh) {
   # combine all percentile-specific model results
   all_results_spec <- bind_rows(res95_spec, res75_spec, res50_spec)
 
-  # add type & cov_type as leading columns
+  # add type as leading column
   all_results_spec <- all_results_spec %>%
-    mutate(type = type, cov_type = cov_type) %>%
-    relocate(type, cov_type, .before = everything())
+    mutate(type = type) %>%
+    relocate(type, .before = everything())
 
   all_df <- all_df %>%
-    mutate(type = type, cov_type = cov_type) %>%
-    relocate(type, cov_type, .before = everything())
+    mutate(type = type) %>%
+    relocate(type, .before = everything())
 
    # return outputs for this one run
   list(
@@ -322,17 +224,15 @@ run_one <- function(type, cov_type, plddt_thresh) {
 
 # ---- run all combos ----
 for (tt in types) { # Loop over dataset types (e.g., af, crystal)
-  for (cc in cov_vec) { # Loop over entanglement variants (e.g., noncovalent, covalent, knot)
-    out <- run_one(tt, cc, plddt_thresh = plddt_thresh) # Run analysis for this combination
-    res_list[[length(res_list) + 1L]] <- out$results  # Append model results
-    data_list[[length(data_list) + 1L]] <- out$data  # Append run data tables
-    fileNames <- unique(c(fileNames, out$fileName))
+  out <- run_one(tt, plddt_thresh = 70) # Run analysis for this combination
+  res_list[[length(res_list) + 1L]] <- out$results  # Append model results
+  data_list[[length(data_list) + 1L]] <- out$data  # Append run data tables
+  fileNames <- unique(c(fileNames, out$fileName))
 
-    # delete everything except the required objects
-    to_keep <- c("run_one", "res_list", "data_list", "types", "cov_vec", "plddt_thresh", "option", "fileName", "fileNames", "tt", "cc")
-    rm(list = setdiff(ls(), to_keep))
-    invisible(gc()) # frees memory that is no longer being used
-  }
+  # delete everything except the required objects
+  to_keep <- c("run_one", "res_list", "data_list", "types", "option", "fileName", "fileNames", "tt")
+  rm(list = setdiff(ls(), to_keep))
+  invisible(gc()) # frees memory that is no longer being used
 }
 
 
@@ -340,9 +240,9 @@ for (tt in types) { # Loop over dataset types (e.g., af, crystal)
 final_results <- bind_rows(res_list)
 all_data <- bind_rows(data_list)
 
-# BH correction across types (af, crystal) for the same cov_type and threshold (Percentile)
+# BH correction across types (af, crystal) for the same threshold (Percentile)
 final_results <- final_results %>%
-  group_by(cov_type, Percentile) %>%  # Correct within each cov_type x percentile family
+  group_by(Percentile) %>%  # Correct within each percentile family
   mutate(
     n_tested_BH = sum(!is.na(p_value)), # Number of non-NA tests in this group
     p_value_BH  = { # Compute BH-adjusted p-values (keeping NAs)
@@ -355,7 +255,7 @@ final_results <- final_results %>%
   ) %>%
   ungroup() %>%
   # keep identifiers up front
-  relocate(type, cov_type, Percentile, Disease_Class, .before = everything())
+  relocate(type, Percentile, Disease_Class, .before = everything())
 
 assign(fileName, final_results)  # Assign results into an object named by fileName
 
@@ -366,11 +266,10 @@ write.csv(final_results, file = paste0("Results/Dataframes/", fileName, format(S
 write.csv(all_data, file = paste0("Data/DataRanInAnalysis/", fileName, format(Sys.time(), "_%Y-%m-%d_%H-%M-%S"), ".csv"), row.names = FALSE)
 
 # Plot
-# Build a plotting subset: AF + noncovalent + 50th percentile
+# Build a plotting subset: AF + 50th percentile
 final_results_filtered <- final_results %>%
   filter(
     type == "af",
-    cov_type == "noncovalent",
     Percentile == "50th"
   ) %>%
   filter(
@@ -407,63 +306,48 @@ p <- ggplot(
     color = Significant
   )
 ) +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.8) +
-  geom_point(size = 2.6, stroke = 1.0) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 1.2) +
+  geom_point(size = 4.2, stroke = 1.2) +
   geom_errorbarh(
     aes(xmin = CI_lower, xmax = CI_upper),
-    height = 0.2,
-    linewidth = 0.8
+    height = 0.22,
+    linewidth = 1.2
   ) +
-  scale_shape_manual(
-    values = c("TRUE" = 1, "FALSE" = 16),
-    labels = c("FALSE" = "Not significant", "TRUE" = "Significant")
-  ) +
-  scale_color_manual(
-    values = c("TRUE" = "black", "FALSE" = "red"),
-    labels = c("FALSE" = "Not significant", "TRUE" = "Significant")
-  ) +
+  scale_shape_manual(values = c("TRUE" = 1, "FALSE" = 16)) +
+  scale_color_manual(values = c("TRUE" = "black", "FALSE" = "red")) +
   scale_x_continuous(
     limits = c(x_min, x_max),
     breaks = seq(x_min, x_max, by = 0.2),
     expand = c(0, 0)
   ) +
-  scale_y_discrete(labels = function(x) str_wrap(x, width = 25)) +
+  scale_y_discrete(
+    labels = function(x) stringr::str_wrap(x, width = 28),
+    expand = expansion(add = 0.35)
+  ) +
   labs(
     y = "Disease Class",
-    x = "Odds Ratio",
-    color = "p-value Significance",
-    shape = "p-value Significance"
+    x = "Odds Ratio"
   ) +
   theme_bw() +
   theme(
     text = element_text(family = "Arial"),
     panel.grid = element_blank(),
     panel.border = element_blank(),
+    axis.line = element_line(color = "black", linewidth = 1),
 
-    axis.line = element_line(color = "black", linewidth = 0.8),
+    axis.text.x  = element_text(size = 14, color = "black"),
+    axis.text.y  = element_text(size = 14, color = "black", lineheight = 1),
+    axis.title.x = element_text(size = 22, color = "black"),
+    axis.title.y = element_text(size = 22, color = "black"),
 
-    # tick label size = 7
-    axis.text  = element_text(size = 7, color = "black"),
-    axis.title = element_text(size = 9, color = "black"),
+    axis.ticks = element_line(color = "black", linewidth = 1),
+    axis.ticks.length = unit(8, "pt"),
 
-    axis.ticks = element_line(color = "black", linewidth = 0.8),
-    axis.ticks.length = unit(6, "pt"),
+    legend.position = "none",
 
-    # make panel square without distorting geometry
-    aspect.ratio = 1,
-
-    # LEGEND INSIDE (bottom right corner)
-    legend.position = c(0.98, 0.02),
-    legend.justification = c(1, 0),
-    legend.background = element_blank(),
-    legend.key = element_blank(),
-    legend.text  = element_text(size = 6),
-    legend.title = element_text(size = 7),
-
-    plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10, unit = "pt")
+    plot.margin = ggplot2::margin(t = 12, r = 20, b = 12, l = 35, unit = "pt")
   )
 
-# Save
 ggsave(
   filename = paste0(
     "Results/Plots/a1_2_af_noncov_50th",
@@ -472,11 +356,23 @@ ggsave(
   ),
   plot   = p,
   device = svglite::svglite,
-  width  = 7,      # square, Word-friendly
-  height = 7,
+  width  = 11,
+  height = 10,
   units  = "in"
 )
 
+ggsave(
+  filename = paste0(
+    "Results/Plots/a1_2_af_noncov_50th",
+    format(Sys.time(), "_%Y-%m-%d_%H-%M-%S"),
+    "_plot.pdf"
+  ),
+  plot   = p + theme(text = element_text(family = "sans")),
+  device = cairo_pdf,
+  width  = 11,
+  height = 10,
+  units  = "in"
+)
 
 write.csv(final_results_filtered, file = paste0("Results/Dataframes/", fileName,"_plot_values", format(Sys.time(), "_%Y-%m-%d_%H-%M-%S"), ".csv"), row.names = FALSE)
 

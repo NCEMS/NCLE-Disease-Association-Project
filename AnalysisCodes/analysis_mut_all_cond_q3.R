@@ -5,7 +5,7 @@
 cat('date:',format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
 cat("control file input: Controlm1_3\n")
 cat("types: af\n")
-cat("plddt_thresh:", plddt_thresh, "\n")
+cat("plddt_thresh: 70\n")
 
 # Data Checks
 # Libraries
@@ -60,8 +60,7 @@ for (class in disease_classes) {
     protein_summary,
     file = paste0(
       "Data/DataRanInAnalysis/",
-      "mutation_q3_type_af_pthr_", plddt_thresh,
-      "_", make.names(class),
+      "mutation_q3_type_af_pthr_70_", make.names(class),
       "_protein_summary_used_in_glm",
       format(Sys.time(), "_%Y-%m-%d_%H-%M-%S"),
       ".csv"
@@ -184,7 +183,7 @@ final_results_filtered <- len_df %>%
   )
 
 # File naming
-fileName <- paste("mutation_q3_type_af_pthr_",plddt_thresh,sep="")
+fileName <- paste("mutation_q3_type_af_pthr_70",sep="")
 final_output_file <- paste0(
   "Results/Dataframes/", fileName,
   "_results_len_", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"), ".csv"
@@ -212,63 +211,48 @@ p <- ggplot(
     color = Significant
   )
 ) +
-  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.8) +
-  geom_point(size = 2.6, stroke = 1.0) +
+  geom_vline(xintercept = 1, linetype = "dashed", linewidth = 1.2) +
+  geom_point(size = 4.2, stroke = 1.2) +
   geom_errorbarh(
     aes(xmin = CI_Lower, xmax = CI_Upper),
-    height = 0.2,
-    linewidth = 0.8
+    height = 0.22,
+    linewidth = 1.2
   ) +
-  scale_shape_manual(
-    values = c("TRUE" = 1, "FALSE" = 16),
-    labels = c("FALSE" = "Not significant", "TRUE" = "Significant")
-  ) +
-  scale_color_manual(
-    values = c("TRUE" = "black", "FALSE" = "red"),
-    labels = c("FALSE" = "Not significant", "TRUE" = "Significant")
-  ) +
+  scale_shape_manual(values = c("TRUE" = 1, "FALSE" = 16)) +
+  scale_color_manual(values = c("TRUE" = "black", "FALSE" = "red")) +
   scale_x_continuous(
     limits = c(x_min, x_max),
     breaks = seq(x_min, x_max, by = 0.2),
     expand = c(0, 0)
   ) +
-  scale_y_discrete(labels = function(x) str_wrap(x, width = 25)) +
+  scale_y_discrete(
+    labels = function(x) stringr::str_wrap(x, width = 28),
+    expand = expansion(add = 0.35)
+  ) +
   labs(
     y = "Disease Class",
-    x = "Odds Ratio",
-    color = "p-value Significance",
-    shape = "p-value Significance"
+    x = "Odds Ratio"
   ) +
   theme_bw() +
   theme(
     text = element_text(family = "Arial"),
     panel.grid = element_blank(),
     panel.border = element_blank(),
+    axis.line = element_line(color = "black", linewidth = 1),
 
-    axis.line = element_line(color = "black", linewidth = 0.8),
+    axis.text.x  = element_text(size = 14, color = "black"),
+    axis.text.y  = element_text(size = 14, color = "black", lineheight = 1),
+    axis.title.x = element_text(size = 22, color = "black"),
+    axis.title.y = element_text(size = 22, color = "black"),
 
-    # tick label size = 7
-    axis.text  = element_text(size = 7, color = "black"),
-    axis.title = element_text(size = 9, color = "black"),
+    axis.ticks = element_line(color = "black", linewidth = 1),
+    axis.ticks.length = unit(8, "pt"),
 
-    axis.ticks = element_line(color = "black", linewidth = 0.8),
-    axis.ticks.length = unit(6, "pt"),
+    legend.position = "none",
 
-    # make panel square without distorting geometry
-    aspect.ratio = 1,
-
-    # LEGEND INSIDE (bottom right corner)
-    legend.position = c(0.98, 0.02),
-    legend.justification = c(1, 0),
-    legend.background = element_blank(),
-    legend.key = element_blank(),
-    legend.text  = element_text(size = 6),
-    legend.title = element_text(size = 7),
-
-    plot.margin = ggplot2::margin(t = 10, r = 10, b = 10, l = 10, unit = "pt")
+    plot.margin = ggplot2::margin(t = 12, r = 20, b = 12, l = 35, unit = "pt")
   )
 
-# Save
 ggsave(
   filename = paste0(
     "Results/Plots/mut_q3_af_noncov_50th",
@@ -277,7 +261,20 @@ ggsave(
   ),
   plot   = p,
   device = svglite::svglite,
-  width  = 7,      # square, Word-friendly
-  height = 7,
+  width  = 11,
+  height = 10,
+  units  = "in"
+)
+
+ggsave(
+  filename = paste0(
+    "Results/Plots/mut_q3_af_noncov_50th",
+    format(Sys.time(), "_%Y-%m-%d_%H-%M-%S"),
+    "_plot.pdf"
+  ),
+  plot   = p + theme(text = element_text(family = "sans")),
+  device = cairo_pdf,
+  width  = 11,
+  height = 10,
   units  = "in"
 )
